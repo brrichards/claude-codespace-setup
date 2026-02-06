@@ -3,6 +3,11 @@ set -euo pipefail
 
 # Claude Codespace Setup Script
 #
+# Usage:
+#   ./setup-ai-assistant.sh [skill1 skill2 ...]
+#   Default skills from .claude/skills/skills.md are always installed.
+#   Additional skills can be provided as arguments.
+#
 # Environment Variables:
 #   CLAUDE_SETUP_REPO - GitHub repo to fetch configs from (default: brrichards/claude-codespace-setup)
 #   CLAUDE_SETUP_REF  - Git ref (branch/tag) to use (default: main)
@@ -37,19 +42,35 @@ download_file() {
 download_skill() {
     local skill_name="$1"
     mkdir -p ".claude/skills/${skill_name}"
-    download_file ".claude/skills/${skill_name}/SKILL.md" ".claude/skills/${skill_name}/SKILL.md" "true"
+
+    echo "Downloading skill: ${skill_name}..."
+    if ! download_file ".claude/skills/${skill_name}/SKILL.md" ".claude/skills/${skill_name}/SKILL.md" "true"; then
+        echo "Error: Failed to download skill '${skill_name}' from ${BASE_URL}/.claude/skills/${skill_name}/SKILL.md" >&2
+        return 1
+    fi
+    echo "Successfully downloaded skill: ${skill_name}"
 }
 
 # --- Download configs ---
 download_file ".claude/settings.json" ".claude/settings.json" "true"
 download_file ".claude/CLAUDE.md" ".claude/CLAUDE.md" "false"
 
-# --- Download skills from manifest ---
+# --- Download skills ---
+# Always download default skills from manifest
+echo "Downloading default skills from manifest..."
 if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o /tmp/skills.md; then
     while IFS= read -r line; do
         line="${line#- }"
         [[ -z "$line" || "$line" == \#* ]] && continue
-        download_skill "$line"
+        download_skill "$line" || true
     done < /tmp/skills.md
     rm -f /tmp/skills.md
+fi
+
+# Download additional skills from arguments if provided
+if [[ $# -gt 0 ]]; then
+    echo "Downloading ${#} additional skill(s) from arguments..."
+    for skill_name in "$@"; do
+        download_skill "$skill_name" || true
+    done
 fi

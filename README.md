@@ -12,6 +12,14 @@ Add this to your `devcontainer.json` `postCreateCommand`:
 }
 ```
 
+To install additional skills beyond the defaults, pass them as arguments using `bash -s --`:
+
+```json
+{
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup-ai-assistant.sh | bash -s -- skill1 skill2"
+}
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -74,7 +82,8 @@ Claude Code runs most commands without prompting, enabling a smooth workflow for
    - Creates the `.claude/` directory structure
    - Downloads `settings.json` (always overwrites)
    - Downloads `CLAUDE.md` (only if not present)
-   - Downloads all skills (always overwrites)
+   - Downloads all default skills from `.claude/skills/skills.md` manifest (always overwrites)
+   - Downloads any additional skills passed as arguments (if provided)
    - Prints a summary of what was installed/skipped
 
 The script is idempotent and safe to run multiple times. It uses only `curl` — no `git clone` or `gh` CLI required.
