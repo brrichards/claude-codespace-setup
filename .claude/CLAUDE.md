@@ -5,19 +5,18 @@
 Read the following skills as needed:
 
 - `.claude/skills/reviewer/SKILL.md` — Review code for bugs and issues
-- `.claude/skills/simplifier/SKILL.md` — Simplify code without changing behavior
-- `.claude/skills/pre-pr/SKILL.md` — Run the full review/simplify pipeline before presenting work
 
-## Agents
+Additional skills (simplifier, pre-pr, agents) are available via skillsets. Use `/skillsets add full-pipeline` to install the complete review/simplify/pre-PR pipeline.
 
-The following agent definitions are available for use with the Task tool:
+### Skillsets
 
-- `.claude/agents/code-reviewer.md` — Spawnable reviewer agent
-- `.claude/agents/code-simplifier.md` — Spawnable simplifier agent
+Skills are organized into named groups called skillsets. Use `/skillsets` to manage them:
 
-### Workflow
+- `/skillsets list` - See available and active skillsets
+- `/skillsets add <name>` - Add a group of related skills
+- `/skillsets remove <name>` - Remove a skillset (keeps skills needed by other active skillsets)
 
-After completing any implementation task, read and follow `.claude/skills/pre-pr/SKILL.md` before presenting your work. The pre-pr pipeline will spawn agents to handle review and simplification passes.
+Active skillsets and their state are tracked in `.claude/skillsets/active.json`.
 
 ### Adding Skills
 

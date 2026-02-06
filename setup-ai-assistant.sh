@@ -8,7 +8,7 @@ set -euo pipefail
 #   CLAUDE_SETUP_REF  - Git ref (branch/tag) to use (default: main)
 
 CLAUDE_SETUP_REPO="${CLAUDE_SETUP_REPO:-brrichards/claude-codespace-setup}"
-CLAUDE_SETUP_REF="${CLAUDE_SETUP_REF:-main}"
+CLAUDE_SETUP_REF="${CLAUDE_SETUP_REF:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)}"
 BASE_URL="https://raw.githubusercontent.com/${CLAUDE_SETUP_REPO}/${CLAUDE_SETUP_REF}"
 
 # --- Install Claude Code ---
@@ -20,7 +20,6 @@ fi
 
 # --- Create directories ---
 mkdir -p .claude/skills
-mkdir -p .claude/agents
 
 # --- Download helpers ---
 download_file() {
@@ -45,10 +44,6 @@ download_skill() {
 download_file ".claude/settings.json" ".claude/settings.json" "true"
 download_file ".claude/CLAUDE.md" ".claude/CLAUDE.md" "false"
 
-# --- Download agents ---
-download_file ".claude/agents/code-reviewer.md" ".claude/agents/code-reviewer.md" "true"
-download_file ".claude/agents/code-simplifier.md" ".claude/agents/code-simplifier.md" "true"
-
 # --- Download skills from manifest ---
 if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o /tmp/skills.md; then
     while IFS= read -r line; do
@@ -57,4 +52,26 @@ if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o /tmp/skills.md; then
         download_skill "$line"
     done < /tmp/skills.md
     rm -f /tmp/skills.md
+fi
+
+# --- Download skillset management infrastructure ---
+mkdir -p .claude/skillsets/bin
+mkdir -p .claude/commands
+
+download_file ".claude/skillsets/skillsets.json" ".claude/skillsets/skillsets.json" "true"
+download_file ".claude/skillsets/bin/skillsets.js" ".claude/skillsets/bin/skillsets.js" "true"
+
+# --- Download slash commands ---
+download_file ".claude/commands/skillsets.md" ".claude/commands/skillsets.md" "true"
+
+# --- Seed active.json with default skillset from manifest skills ---
+if [[ ! -f ".claude/skillsets/active.json" ]]; then
+    cat > .claude/skillsets/active.json << 'SEED'
+{
+  "active_skillsets": ["default"],
+  "installed_skills": {
+    "reviewer": ["default"]
+  }
+}
+SEED
 fi
