@@ -1,6 +1,6 @@
 # Claude Codespace Setup
 
-Distributes Claude Code configuration, permissions, skills, and subagent definitions to GitHub Codespaces. Consuming repos add a single `curl | bash` one-liner to their `devcontainer.json` and this repo handles everything else — installing Claude Code, deploying permissions, project instructions, skills, and spawnable subagent prompts.
+Distributes Claude Code configuration, permissions, skills, and agent definitions to GitHub Codespaces. Consuming repos add a single `curl | bash` one-liner to their `devcontainer.json` and this repo handles everything else — installing Claude Code, deploying permissions, project instructions, skills, and spawnable agent prompts.
 
 ## Quick Start
 
@@ -29,9 +29,9 @@ The script writes the following files into `.claude/` in the consuming repo's wo
 .claude/
 ├── settings.json                  # Permissions config (always overwritten)
 ├── CLAUDE.md                      # Project instructions (only if not present)
-├── subagents/
-│   ├── code-reviewer.md           # Reviewer subagent definition (always overwritten)
-│   └── code-simplifier.md         # Simplifier subagent definition (always overwritten)
+├── agents/
+│   ├── code-reviewer.md           # Reviewer agent definition (always overwritten)
+│   └── code-simplifier.md         # Simplifier agent definition (always overwritten)
 └── skills/
     ├── skills.md                  # Skill manifest
     ├── reviewer/
@@ -63,18 +63,18 @@ Three skills are included, each in its own folder under `.claude/skills/`:
 |-------|-------------|
 | `reviewer` | Reviews all changes for bugs, security issues, debug artifacts, and code quality problems |
 | `simplifier` | Reduces complexity without changing behavior — fewer lines, fewer abstractions, fewer concepts |
-| `pre-pr` | Orchestrates a review/simplify loop using subagents until both pass, then presents clean work |
+| `pre-pr` | Orchestrates a review/simplify loop using agents until both pass, then presents clean work |
 
-## Subagents
+## Agents
 
-Two subagent definitions live in `.claude/subagents/` and are spawned by the pre-pr pipeline via the Task tool:
+Two agent definitions live in `.claude/agents/` and are spawned by the pre-pr pipeline via the Task tool:
 
-| Subagent | Description |
-|----------|-------------|
+| Agent | Description |
+|-------|-------------|
 | `code-reviewer.md` | Reviews branch changes for bugs, security issues, lint errors, and debug artifacts. Reads and follows the reviewer skill. |
 | `code-simplifier.md` | Simplifies branch changes without changing behavior. Reads and follows the simplifier skill. |
 
-The pre-pr pipeline reads these definitions and passes their contents as prompts when spawning `general-purpose` subagents with the Task tool. Each subagent gets a fresh context window for every pass.
+The pre-pr pipeline reads these definitions and passes their contents as prompts when spawning `general-purpose` agents with the Task tool. Each agent gets a fresh context window for every pass.
 
 ## Adding a Skill
 
@@ -83,15 +83,15 @@ The pre-pr pipeline reads these definitions and passes their contents as prompts
 
 The setup script reads the manifest and downloads each listed skill.
 
-## Adding a Subagent
+## Adding an Agent
 
-1. Create a markdown file in `.claude/subagents/` (e.g., `my-agent.md`)
+1. Create a markdown file in `.claude/agents/` (e.g., `my-agent.md`)
 2. Add a `download_file` line to `setup-ai-assistant.sh` to download it:
    ```bash
-   download_file ".claude/subagents/my-agent.md" ".claude/subagents/my-agent.md" "true"
+   download_file ".claude/agents/my-agent.md" ".claude/agents/my-agent.md" "true"
    ```
 
 ## Customization
 
 - **`CLAUDE.md`**: Consumers can place their own `.claude/CLAUDE.md` in the repo before the script runs and it will not be overwritten. This lets teams add project-specific instructions on top of the centrally managed skills and permissions.
-- **`settings.json`, skills, and subagents**: Always overwritten on each Codespace creation to ensure consistent, centrally managed configuration across all consuming repos.
+- **`settings.json`, skills, and agents**: Always overwritten on each Codespace creation to ensure consistent, centrally managed configuration across all consuming repos.

@@ -8,16 +8,16 @@ Read the following skills as needed:
 - `.claude/skills/simplifier/SKILL.md` — Simplify code without changing behavior
 - `.claude/skills/pre-pr/SKILL.md` — Run the full review/simplify pipeline before presenting work
 
-## Subagents
+## Agents
 
-The following subagent definitions are available for use with the Task tool:
+The following agent definitions are available for use with the Task tool:
 
-- `.claude/subagents/code-reviewer.md` — Spawnable reviewer agent
-- `.claude/subagents/code-simplifier.md` — Spawnable simplifier agent
+- `.claude/agents/code-reviewer.md` — Spawnable reviewer agent
+- `.claude/agents/code-simplifier.md` — Spawnable simplifier agent
 
 ### Workflow
 
-After completing any implementation task, read and follow `.claude/skills/pre-pr/SKILL.md` before presenting your work. The pre-pr pipeline will spawn subagents to handle review and simplification passes.
+After completing any implementation task, read and follow `.claude/skills/pre-pr/SKILL.md` before presenting your work. The pre-pr pipeline will spawn agents to handle review and simplification passes.
 
 ### Adding Skills
 
