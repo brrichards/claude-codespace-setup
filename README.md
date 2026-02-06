@@ -1,10 +1,10 @@
 # Claude Codespace Setup
 
-A distribution repo that deploys Claude Code configuration to GitHub Codespaces. Consuming repos add a single `curl | bash` one-liner to their `devcontainer.json`, and this repo handles everything else: installing Claude Code, deploying permissions, project instructions, and skills.
+Distributes Claude Code configuration, permissions, skills, and subagent definitions to GitHub Codespaces. Consuming repos add a single `curl | bash` one-liner to their `devcontainer.json` and this repo handles everything else — installing Claude Code, deploying permissions, project instructions, skills, and spawnable subagent prompts.
 
 ## Quick Start
 
-Add this to your `devcontainer.json` `postCreateCommand`:
+Add this to your `devcontainer.json`:
 
 ```json
 {
@@ -14,67 +14,84 @@ Add this to your `devcontainer.json` `postCreateCommand`:
 
 ## Configuration
 
-### Environment Variables
+Two environment variables control where the script fetches configs from:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLAUDE_SETUP_REPO` | `brrichards/claude-codespace-setup` | GitHub repo to fetch configs from (for forks) |
-| `CLAUDE_SETUP_REF` | `main` | Git ref (branch/tag/commit) to use |
+| `CLAUDE_SETUP_REPO` | `brrichards/claude-codespace-setup` | GitHub repo to fetch configs from. Fork this repo and set this variable to use your own configuration. |
+| `CLAUDE_SETUP_REF` | `main` | Git ref (branch or tag) to use. Pin to a specific tag for stability. |
 
-## File Structure
+## What Gets Deployed
+
+The script writes the following files into `.claude/` in the consuming repo's workspace:
 
 ```
-├── README.md                     # This file
-├── setup-ai-assistant.sh         # Entry point — curled and piped to bash
-└── .claude/
-    ├── CLAUDE.md                 # Default project instructions template
-    ├── settings.json             # Permissions config
-    └── skills/
-        ├── skills.md             # Manifest listing skill names to download
-        └── reviewer/
-            └── SKILL.md          # Review staged/branched changes skill
+.claude/
+├── settings.json                  # Permissions config (always overwritten)
+├── CLAUDE.md                      # Project instructions (only if not present)
+├── subagents/
+│   ├── code-reviewer.md           # Reviewer subagent definition (always overwritten)
+│   └── code-simplifier.md         # Simplifier subagent definition (always overwritten)
+└── skills/
+    ├── skills.md                  # Skill manifest
+    ├── reviewer/
+    │   └── SKILL.md               # Code review skill (always overwritten)
+    ├── simplifier/
+    │   └── SKILL.md               # Code simplification skill (always overwritten)
+    └── pre-pr/
+        └── SKILL.md               # Pre-PR pipeline skill (always overwritten)
 ```
-
-The repo structure mirrors the deployed structure exactly, making it easy to see what gets installed where.
 
 ## Permissions Model
 
-The `settings.json` uses `bypassPermissions` mode with an explicit deny list. This allows Claude Code to work efficiently while blocking dangerous operations.
+The `settings.json` uses `bypassPermissions` mode with an explicit deny list. Claude Code runs most commands without prompting, while the deny list blocks dangerous operations:
 
-### Default Mode: bypassPermissions
+| Pattern | What it prevents |
+|---------|-----------------|
+| `git push*` | Pushing to remote — users should push explicitly after review |
+| `git reset --hard*` | Discarding uncommitted local work |
+| `git clean -f*` | Deleting untracked files |
+| `rm -rf /*` | Wiping the filesystem root |
+| `rm -rf .*` | Wiping hidden directories |
+| `: \| *` | Fork bombs and resource exhaustion |
 
-Claude Code runs most commands without prompting, enabling a smooth workflow for development tasks.
+## Skills
 
-### Denied Operations
+Three skills are included, each in its own folder under `.claude/skills/`:
 
-| Pattern | Reason |
-|---------|--------|
-| `git push*` | Prevents accidental pushes; requires explicit user action |
-| `git push --force*` | Prevents force pushes that can destroy history |
-| `git push -f*` | Same as above (short flag) |
-| `git reset --hard*` | Prevents loss of uncommitted work |
-| `git clean -f*` | Prevents deletion of untracked files |
-| `rm -rf /*` | Prevents catastrophic system deletion |
-| `rm -rf .*` | Prevents deletion of dotfiles/hidden directories |
-| `: \| *` | Prevents fork bombs and similar resource exhaustion |
+| Skill | Description |
+|-------|-------------|
+| `reviewer` | Reviews all changes for bugs, security issues, debug artifacts, and code quality problems |
+| `simplifier` | Reduces complexity without changing behavior — fewer lines, fewer abstractions, fewer concepts |
+| `pre-pr` | Orchestrates a review/simplify loop using subagents until both pass, then presents clean work |
 
-### Rationale
+## Subagents
 
-- **Git push operations**: Users should explicitly push changes after review
-- **Destructive git operations**: Hard resets and force cleans can cause data loss
-- **Dangerous rm commands**: Broad deletions should never be automated
-- **Fork bombs**: Prevent resource exhaustion attacks
+Two subagent definitions live in `.claude/subagents/` and are spawned by the pre-pr pipeline via the Task tool:
 
-## How It Works
+| Subagent | Description |
+|----------|-------------|
+| `code-reviewer.md` | Reviews branch changes for bugs, security issues, lint errors, and debug artifacts. Reads and follows the reviewer skill. |
+| `code-simplifier.md` | Simplifies branch changes without changing behavior. Reads and follows the simplifier skill. |
 
-1. Consumer adds the `curl | bash` one-liner to `devcontainer.json`
-2. When the Codespace starts, the script:
-   - Installs Claude Code via the official installer
-   - Verifies installation and prints the version
-   - Creates the `.claude/` directory structure
-   - Downloads `settings.json` (always overwrites)
-   - Downloads `CLAUDE.md` (only if not present)
-   - Downloads all skills (always overwrites)
-   - Prints a summary of what was installed/skipped
+The pre-pr pipeline reads these definitions and passes their contents as prompts when spawning `general-purpose` subagents with the Task tool. Each subagent gets a fresh context window for every pass.
 
-The script is idempotent and safe to run multiple times. It uses only `curl` — no `git clone` or `gh` CLI required.
+## Adding a Skill
+
+1. Create a folder in `.claude/skills/{name}/` with a `SKILL.md` inside
+2. Add `- name` to `.claude/skills/skills.md`
+
+The setup script reads the manifest and downloads each listed skill.
+
+## Adding a Subagent
+
+1. Create a markdown file in `.claude/subagents/` (e.g., `my-agent.md`)
+2. Add a `download_file` line to `setup-ai-assistant.sh` to download it:
+   ```bash
+   download_file ".claude/subagents/my-agent.md" ".claude/subagents/my-agent.md" "true"
+   ```
+
+## Customization
+
+- **`CLAUDE.md`**: Consumers can place their own `.claude/CLAUDE.md` in the repo before the script runs and it will not be overwritten. This lets teams add project-specific instructions on top of the centrally managed skills and permissions.
+- **`settings.json`, skills, and subagents**: Always overwritten on each Codespace creation to ensure consistent, centrally managed configuration across all consuming repos.

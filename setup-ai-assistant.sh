@@ -20,6 +20,7 @@ fi
 
 # --- Create directories ---
 mkdir -p .claude/skills
+mkdir -p .claude/subagents
 
 # --- Download helpers ---
 download_file() {
@@ -43,6 +44,10 @@ download_skill() {
 # --- Download configs ---
 download_file ".claude/settings.json" ".claude/settings.json" "true"
 download_file ".claude/CLAUDE.md" ".claude/CLAUDE.md" "false"
+
+# --- Download subagents ---
+download_file ".claude/subagents/code-reviewer.md" ".claude/subagents/code-reviewer.md" "true"
+download_file ".claude/subagents/code-simplifier.md" ".claude/subagents/code-simplifier.md" "true"
 
 # --- Download skills from manifest ---
 if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o /tmp/skills.md; then

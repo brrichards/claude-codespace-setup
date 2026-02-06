@@ -1,2 +1,5 @@
-# Skills manifest - one skill name per line
-reviewer
+# Skills
+
+- reviewer
+- simplifier
+- pre-pr
