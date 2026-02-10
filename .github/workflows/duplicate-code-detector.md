@@ -8,7 +8,6 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-engine: codex
 tools:
   serena: ["go"]
 safe-outputs:
