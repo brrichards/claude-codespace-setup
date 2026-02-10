@@ -4,6 +4,9 @@ description: Identifies duplicate code patterns across the codebase and suggests
 on:
   workflow_dispatch:
   schedule: daily
+engine:
+  model: gpt-5.2
+  id: copilot
 permissions:
   contents: read
   issues: read

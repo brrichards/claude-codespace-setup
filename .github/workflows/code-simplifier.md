@@ -6,6 +6,9 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+engine:
+   model: gpt-5.2
+   id: copilot
 imports:
 - github/gh-aw/.github/workflows/shared/reporting.md@94662b1dee8ce96c876ba9f33b3ab8be32de82a4
 safe-outputs:
