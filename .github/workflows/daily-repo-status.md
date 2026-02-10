@@ -14,6 +14,10 @@ permissions:
   issues: read
   pull-requests: read
 
+engine:
+  model: gpt-5.2
+  id: copilot
+
 network: defaults
 
 tools:
