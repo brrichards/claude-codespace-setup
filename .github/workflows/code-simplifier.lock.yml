@@ -77,6 +77,8 @@ jobs:
       contents: read
       issues: read
       pull-requests: read
+    concurrency:
+      group: "gh-aw-copilot-${{ github.workflow }}"
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       GH_AW_ASSETS_ALLOWED_EXTS: ""
@@ -548,7 +550,7 @@ jobs:
           </system>
           PROMPT_EOF
           cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          {{#runtime-import .github/aw/imports/github/gh-aw/94662b1dee8ce96c876ba9f33b3ab8be32de82a4/.github_workflows_shared_reporting.md}}
+          {{#runtime-import .github/workflows/.github/aw/imports/github/gh-aw/94662b1dee8ce96c876ba9f33b3ab8be32de82a4/.github_workflows_shared_reporting.md}}
           PROMPT_EOF
           cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
           {{#runtime-import .github/workflows/code-simplifier.md}}
@@ -906,6 +908,8 @@ jobs:
     if: needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true'
     runs-on: ubuntu-latest
     permissions: {}
+    concurrency:
+      group: "gh-aw-copilot-${{ github.workflow }}"
     timeout-minutes: 10
     outputs:
       success: ${{ steps.parse_results.outputs.success }}
@@ -1048,6 +1052,7 @@ jobs:
       pull-requests: write
     timeout-minutes: 15
     env:
+      GH_AW_ENGINE_ID: "copilot"
       GH_AW_TRACKER_ID: "code-simplifier"
       GH_AW_WORKFLOW_ID: "code-simplifier"
       GH_AW_WORKFLOW_NAME: "Code Simplifier"
