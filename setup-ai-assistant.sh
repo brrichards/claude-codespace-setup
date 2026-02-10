@@ -41,13 +41,13 @@ download_file() {
 
 download_skill() {
     local skill_name="$1"
-    mkdir -p ".claude/skills/${skill_name}"
+    local skill_dir=".claude/skills/${skill_name}"
+    local skill_file="${skill_dir}/SKILL.md"
+
+    mkdir -p "$skill_dir"
 
     echo "Downloading skill: ${skill_name}..."
-    if ! download_file ".claude/skills/${skill_name}/SKILL.md" ".claude/skills/${skill_name}/SKILL.md" "true"; then
-        echo "Error: Failed to download skill '${skill_name}' from ${BASE_URL}/.claude/skills/${skill_name}/SKILL.md" >&2
-        return 1
-    fi
+    download_file "$skill_file" "$skill_file" "true"
     echo "Successfully downloaded skill: ${skill_name}"
 }
 
@@ -58,13 +58,17 @@ download_file ".claude/CLAUDE.md" ".claude/CLAUDE.md" "false"
 # --- Download skills ---
 # Always download default skills from manifest
 echo "Downloading default skills from manifest..."
-if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o /tmp/skills.md; then
+TMP_DIR="/tmp/gh-aw/agent"
+SKILLS_TMP_FILE="${TMP_DIR}/skills.md"
+
+mkdir -p "$TMP_DIR"
+if curl -fsSL "${BASE_URL}/.claude/skills/skills.md" -o "$SKILLS_TMP_FILE"; then
     while IFS= read -r line; do
         line="${line#- }"
         [[ -z "$line" || "$line" == \#* ]] && continue
         download_skill "$line" || true
-    done < /tmp/skills.md
-    rm -f /tmp/skills.md
+    done < "$SKILLS_TMP_FILE"
+    rm -f "$SKILLS_TMP_FILE"
 fi
 
 # Download additional skills from arguments if provided
