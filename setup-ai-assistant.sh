@@ -8,7 +8,7 @@ set -euo pipefail
 #   claudeSetupRef  - Git ref (branch/tag) to use (default: main)
 
 claudeSetupRepo="${claudeSetupRepo:-brrichards/claude-codespace-setup}"
-claudeSetupRef="${claudeSetupRef:-main}"
+claudeSetupRef="${claudeSetupRef:-brrichards/skillsets-skeleton}"
 baseUrl="https://raw.githubusercontent.com/${claudeSetupRepo}/${claudeSetupRef}"
 
 # --- Install Claude Code ---
