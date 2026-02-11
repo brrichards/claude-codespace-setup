@@ -1,0 +1,19 @@
+{
+  "skillsets": {
+    "codeQuality": {
+      "description": "Review and lint pipeline for code changes",
+      "skills": ["reviewer", "prePr"],
+      "agents": ["codeReviewer"]
+    },
+    "simplifierTools": {
+      "description": "Code simplification and cleanup utilities",
+      "skills": ["simplifier"],
+      "agents": ["codeSimplifier"]
+    },
+    "fullPipeline": {
+      "description": "Complete review, simplify, and pre-PR pipeline",
+      "skills": ["reviewer", "simplifier", "prePr"],
+      "agents": ["codeReviewer", "codeSimplifier"]
+    }
+  }
+}
