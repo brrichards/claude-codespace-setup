@@ -2,30 +2,26 @@
 
 ## Skills
 
-Read the following skill before starting work:
+Read the following skills as needed:
 
-- `.claude/skills/reviewer/SKILL.md` — Review staged/branched changes for common issues
+- `.claude/skills/reviewer/SKILL.md` — Review code for bugs and issues
 
-### Using Additional Skills
+Additional skills (simplifier, pre-pr, agents) are available via skillsets. Use `/skillsets add full-pipeline` to install the complete review/simplify/pre-PR pipeline.
 
-More skills may be available in `.claude/skills/`. To use one:
-1. List what's available: `ls .claude/skills/`
-2. Read the skill file before using it
+### Skillsets
 
-## Skillsets
+Skills are organized into named groups called skillsets. Use `/skillsets` to manage them:
 
-Skillsets are named packages of related skills and agents. Use the `/skillsets` command to manage them:
+- `/skillsets` - Show available skillsets and what's currently active
+- `/skillsets add <name>` - Activate a skillset (replaces any currently active skillset)
+- `/skillsets remove` - Remove the active skillset and its installed items
 
-- `/skillsets` or `/skillsets list` — Show available skillsets, active skillset, and pinned items
-- `/skillsets add <name>` — Activate a skillset (downloads its skills and agents)
-- `/skillsets remove` — Deactivate the current skillset (pinned items are preserved)
+Skillset definitions live in the remote repo. The active state is tracked locally in `.claude/skillsets/active.json`.
 
-## Individual Skill Pinning
+### Individual Skills
 
-Pinned skills persist across skillset switches. Use the `/skills` command:
+Install individual skills or agents without a skillset. These persist across skillset switches:
 
-- `/skills` or `/skills list` — Show pinned items and active skillset info
-- `/skills add <name>` — Download and pin an individual skill or agent
-- `/skills remove <name>` — Unpin (and optionally delete) a skill or agent
-
-The `reviewer` skill is the default pinned skill.
+- `/skills` - Show pinned and skillset skills
+- `/skills add <name>` - Download and pin a skill or agent
+- `/skills remove <name>` - Unpin and remove (unless still needed by active skillset)
