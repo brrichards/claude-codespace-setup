@@ -2,7 +2,6 @@
 
 import { readFile, writeFile, rename, mkdir, rm } from "fs/promises";
 import { join, dirname } from "path";
-import { createInterface } from "readline";
 import { fileURLToPath } from "url";
 
 // #region Constants
@@ -154,22 +153,6 @@ function setDiff(a: string[], b: string[]): string[] {
   return a.filter((item) => !bSet.has(item));
 }
 
-/**
- * Prompts the user for yes/no confirmation via stdin.
- *
- * @param message - The prompt message displayed before `[y/N]`.
- * @returns `true` if the user entered `y` or `Y`, `false` otherwise.
- */
-async function confirm(message: string): Promise<boolean> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(`${message} [y/N] `, (answer: string) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase() === "y");
-    });
-  });
-}
-
 // #endregion
 
 // #region Download helpers
@@ -193,10 +176,7 @@ async function downloadSkill(
 ): Promise<void> {
   const url = `https://raw.githubusercontent.com/${repo}/${ref}/.claude/skills/${name}/SKILL.md`;
   const response = await fetch(url);
-  if (!response.ok) {
-    console.warn(`  Warning: Failed to download skill '${name}' (HTTP ${response.status})`);
-    return;
-  }
+  if (!response.ok) return;
   const content = await response.text();
   const skillDir = join(skillsDir, name);
   await mkdir(skillDir, { recursive: true });
@@ -221,10 +201,7 @@ async function downloadAgent(
 ): Promise<void> {
   const url = `https://raw.githubusercontent.com/${repo}/${ref}/.claude/agents/${name}.md`;
   const response = await fetch(url);
-  if (!response.ok) {
-    console.warn(`  Warning: Failed to download agent '${name}' (HTTP ${response.status})`);
-    return;
-  }
+  if (!response.ok) return;
   const content = await response.text();
   await mkdir(agentsDir, { recursive: true });
   await writeFile(join(agentsDir, `${name}.md`), content, "utf-8");
@@ -312,39 +289,24 @@ async function cmdList(): Promise<void> {
  * Activates a skillset by downloading its skills and agents.
  *
  * @param name - The skillset name from the registry to activate.
- * @param autoYes - When `true`, skips the confirmation prompt.
  *
  * @remarks
  * Removes non-pinned items from the previously active skillset before
  * downloading the new one. Pinned items are never deleted. Exits with
  * code 1 if the requested skillset is not found in the registry.
  */
-async function cmdAdd(name: string, autoYes: boolean): Promise<void> {
+async function cmdAdd(name: string): Promise<void> {
   const registry = await loadRegistry();
   const state = await loadState();
 
   const entry = registry.skillsets[name];
   if (!entry) {
-    console.error(`Error: Skillset '${name}' not found in registry.`);
-    console.error(`Available skillsets: ${Object.keys(registry.skillsets).join(", ")}`);
+    console.log(`"${name}" not found in repo`);
     process.exit(1);
   }
 
   const allItems = [...entry.skills, ...entry.agents];
   const toDelete = setDiff(state.skillsetItems, state.pinned);
-  const toDownload = allItems;
-
-  console.log(`Switching to skillset: ${name}`);
-  console.log(`Will remove: ${toDelete.length > 0 ? toDelete.join(", ") : "nothing"}`);
-  console.log(`Will download: ${toDownload.join(", ")}`);
-
-  if (!autoYes) {
-    const ok = await confirm("Proceed?");
-    if (!ok) {
-      console.log("Aborted.");
-      return;
-    }
-  }
 
   // Remove old non-pinned skillset items
   for (const item of toDelete) {
@@ -367,19 +329,17 @@ async function cmdAdd(name: string, autoYes: boolean): Promise<void> {
   state.skillsetItems = allItems;
   await saveState(state);
 
-  console.log(`Skillset '${name}' activated.`);
+  console.log(`"${name}" downloaded successfully`);
 }
 
 /**
  * Deactivates the current skillset and removes its non-pinned items.
  *
- * @param autoYes - When `true`, skips the confirmation prompt.
- *
  * @remarks
  * Pinned items are preserved on disk. Only items that were installed
  * by the skillset (and not individually pinned) are deleted.
  */
-async function cmdRemove(autoYes: boolean): Promise<void> {
+async function cmdRemove(): Promise<void> {
   const state = await loadState();
 
   if (!state.activeSkillset) {
@@ -388,18 +348,6 @@ async function cmdRemove(autoYes: boolean): Promise<void> {
   }
 
   const toDelete = setDiff(state.skillsetItems, state.pinned);
-
-  console.log(`Removing skillset: ${state.activeSkillset}`);
-  console.log(`Will remove: ${toDelete.length > 0 ? toDelete.join(", ") : "nothing"}`);
-  console.log(`Pinned items preserved: ${state.pinned.length > 0 ? state.pinned.join(", ") : "(none)"}`);
-
-  if (!autoYes) {
-    const ok = await confirm("Proceed?");
-    if (!ok) {
-      console.log("Aborted.");
-      return;
-    }
-  }
 
   // Delete non-pinned skillset items from disk
   for (const item of toDelete) {
@@ -438,27 +386,25 @@ async function main(): Promise<void> {
 
     case "add": {
       const name = args[1];
-      if (!name || name.startsWith("--")) {
-        console.error("Usage: skillsets.ts add <name> [--yes]");
+      if (!name) {
+        console.error("Usage: skillsets.ts add <name>");
         process.exit(1);
       }
-      const autoYes = args.includes("--yes");
-      await cmdAdd(name, autoYes);
+      await cmdAdd(name);
       break;
     }
 
     case "remove": {
-      const autoYes = args.includes("--yes");
-      await cmdRemove(autoYes);
+      await cmdRemove();
       break;
     }
 
     default: {
       console.error(`Unknown command: ${command}`);
       console.error("Usage: skillsets.ts <list|add|remove>");
-      console.error("  list              List available skillsets (default)");
-      console.error("  add <name> [--yes]  Activate a skillset");
-      console.error("  remove [--yes]      Remove the active skillset");
+      console.error("  list            List available skillsets (default)");
+      console.error("  add <name>      Activate a skillset");
+      console.error("  remove          Remove the active skillset");
       process.exit(1);
     }
   }

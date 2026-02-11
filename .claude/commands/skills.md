@@ -32,22 +32,41 @@ Read `.claude/skillsets/.setupRef` for the git ref (default: `main`).
 
 ### `/skills add <name>`
 
-1. Read the repo and ref from config files
-2. Use `gh api` to check if the item exists as a skill or agent:
-   - Skill: `gh api repos/{repo}/contents/.claude/skills/{name}/SKILL.md?ref={ref}`
-   - Agent: `gh api repos/{repo}/contents/.claude/agents/{name}.md?ref={ref}`
-3. If found as a skill:
-   - Create directory `.claude/skills/{name}/`
-   - Download the content (the `content` field from the API response is base64-encoded, decode it)
-   - Write to `.claude/skills/{name}/SKILL.md`
-4. If found as an agent:
-   - Create directory `.claude/agents/` if needed
-   - Download and decode the content
-   - Write to `.claude/agents/{name}.md`
-5. If not found as either, report error
-6. Add `name` to the `pinned` array in `active.json` (if not already there)
-7. Save `active.json`
-8. Report success
+Follow these steps exactly. Do NOT deviate or add extra output.
+
+**Step 1 — Validate name against registry**
+
+Read `.claude/skillsets/skillsets.json`. Build the complete set of valid names by collecting all `skills` and `agents` values across every skillset entry. If `<name>` is NOT in this combined set, output exactly:
+
+```
+"<name>" not found in repo
+```
+
+Then STOP. Do NOT try `gh api`. Do NOT suggest alternatives. Do NOT troubleshoot.
+
+**Step 2 — Check if already downloaded**
+
+Read `.claude/skillsets/active.json`.
+
+- If `<name>` is in `skillsetItems` or `pinned`:
+  - If `<name>` is not already in the `pinned` array, add it and save `active.json`
+  - Output exactly: `"<name>" already downloaded. <name> is now pinned`
+  - STOP.
+
+**Step 3 — Download**
+
+Read the repo and ref from config files. Download the item:
+
+- Try as a skill: fetch `https://raw.githubusercontent.com/{repo}/{ref}/.claude/skills/{name}/SKILL.md`
+  - If found: create `.claude/skills/{name}/` directory and write `SKILL.md`
+- Try as an agent: fetch `https://raw.githubusercontent.com/{repo}/{ref}/.claude/agents/{name}.md`
+  - If found: create `.claude/agents/` directory if needed and write `{name}.md`
+
+Add `<name>` to the `pinned` array in `active.json` (if not already there) and save.
+
+Output exactly: `"<name>" downloaded successfully`
+
+Do NOT show any intermediate steps, progress, or explanations.
 
 ### `/skills remove <name>`
 
@@ -62,7 +81,11 @@ Read `.claude/skillsets/.setupRef` for the git ref (default: `main`).
    - Report: "Unpinned {name} (files kept — provided by active skillset)"
 5. Save `active.json`
 
-## Important Notes
+## Strict Behavior Rules
+
+- Do NOT try to find similar names or fuzzy match
+- Do NOT suggest alternatives if a name is not found
+- Do NOT troubleshoot or retry on failure
+- Do NOT add commentary around output messages — show only the exact messages specified above
 - Always read the state file fresh before making changes
 - When writing `active.json`, preserve all fields and only modify what's needed
-- Use `gh api` for GitHub API access (it handles authentication automatically in Codespaces)

@@ -14,4 +14,8 @@ npx tsx .claude/skillsets/skillsets.ts list
 npx tsx .claude/skillsets/skillsets.ts $ARGUMENTS
 ```
 
-Show the output to the user. If the command fails, check that `tsx` is available (`npx tsx --version`) and that the skillsets files exist.
+## Output rules
+
+- Show ONLY the command's stdout/stderr output to the user. Do NOT add any extra commentary, explanation, or formatting around it.
+- If the output contains "not found in repo", stop immediately. Do NOT try alternative names, do NOT suggest corrections, do NOT troubleshoot.
+- Do NOT describe what the command did or summarize its output — just show it verbatim.
