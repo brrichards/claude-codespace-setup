@@ -13,7 +13,7 @@
 #   --target <dir>  Target project directory (default: current directory)
 set -euo pipefail
 
-REPO_URL="https://github.com/brrichards/ff-profiles.git"
+REPO_URL="https://github.com/brrichards/claude-codespace-setup.git"
 DEFAULT_PROFILE="developer"
 
 # ── Argument parsing ──
@@ -65,6 +65,8 @@ if [[ "$LOCAL_MODE" == false ]]; then
 		echo "Cloning ff-profiles..."
 		git clone --quiet "$REPO_URL" "$FF_PROFILES_DIR"
 	fi
+	# Remove repo-specific CI/workflow files — consumers don't need these
+	rm -rf "$FF_PROFILES_DIR/.github"
 else
 	# Local mode: ff-profiles/ should already exist at the target
 	if [[ ! -d "$FF_PROFILES_DIR" ]]; then

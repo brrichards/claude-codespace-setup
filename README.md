@@ -1,4 +1,4 @@
-# ff-profiles
+# Claude Codespace Setup
 
 Self-contained Claude Code profiles for FluidFramework. Swap your entire `.claude/` configuration with a single command.
 
@@ -7,7 +7,7 @@ Self-contained Claude Code profiles for FluidFramework. Swap your entire `.claud
 ### Codespace / Fresh Setup
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/brrichards/ff-profiles/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup.sh | bash
 ```
 
 This will:
@@ -21,9 +21,26 @@ Add to `.devcontainer/devcontainer.json`:
 
 ```json
 {
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/ff-profiles/main/setup.sh | bash"
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup.sh | bash"
 }
 ```
+
+## Permissions Model
+
+All profiles use `bypassPermissions` mode — Claude Code runs most commands without prompting, with an explicit deny list blocking dangerous operations.
+
+### Denied Operations
+
+| Pattern | Reason |
+|---------|--------|
+| `git push*` | Prevents accidental pushes; requires explicit user action |
+| `git push --force*` | Prevents force pushes that can destroy history |
+| `git push -f*` | Same as above (short flag) |
+| `git reset --hard*` | Prevents loss of uncommitted work |
+| `git clean -f*` | Prevents deletion of untracked files |
+| `rm -rf /*` | Prevents catastrophic system deletion |
+| `rm -rf .*` | Prevents deletion of dotfiles/hidden directories |
+| `: \| *` | Prevents fork bombs and similar resource exhaustion |
 
 ## Switching Profiles
 
