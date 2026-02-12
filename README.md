@@ -84,11 +84,3 @@ Each profile is a complete `.claude/` directory snapshot. When you swap to a pro
 | `agents/*.md` | Custom agent definitions |
 | `commands/*.md` | Custom slash commands |
 | `skills/*/SKILL.md` | Custom skills |
-
-## Running Tests
-
-```bash
-bash tests/test-swap.sh
-bash tests/test-setup.sh
-bash tests/test-pr-prep.sh
-```
