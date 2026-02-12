@@ -1,0 +1,58 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"permissions": {
+		"allow": [
+			"Bash(npm run *)",
+			"Bash(pnpm run *)",
+			"Bash(pnpm -r *)",
+			"Bash(npx *)",
+			"Bash(biome check *)",
+			"Bash(biome check .)",
+			"Bash(fluid-build *)",
+			"Bash(flub *)",
+			"Bash(git status)",
+			"Bash(git diff *)",
+			"Bash(git diff)",
+			"Bash(git log *)",
+			"Bash(git add *)",
+			"Bash(git commit *)",
+			"Bash(git branch *)",
+			"Bash(git checkout *)",
+			"Bash(git fetch *)",
+			"Bash(git fetch)",
+			"Bash(git merge *)",
+			"Bash(git rebase *)",
+			"Bash(git stash *)",
+			"Bash(git stash)",
+			"Bash(gh pr *)",
+			"Bash(gh issue *)",
+			"Bash(gh api *)",
+			"Read",
+			"Edit",
+			"Write",
+			"Glob",
+			"Grep",
+			"mcp__github__*"
+		],
+		"ask": [
+			"Bash(git push *)",
+			"Bash(git push)"
+		],
+		"deny": [
+			"Bash(git push --force*)",
+			"Bash(git push -f*)",
+			"Bash(git reset --hard *)",
+			"Bash(git clean -f *)",
+			"Bash(rm -rf /*)",
+			"Bash(rm -rf .*)",
+			"Bash(: | *)",
+			"Bash(curl *)",
+			"Bash(wget *)"
+		]
+	},
+	"enableAllProjectMcpServers": true,
+	"attribution": {
+		"commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
+		"pr": "Generated with Claude Code"
+	}
+}

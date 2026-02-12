@@ -1,80 +1,94 @@
-# Claude Codespace Setup
+# ff-profiles
 
-A distribution repo that deploys Claude Code configuration to GitHub Codespaces. Consuming repos add a single `curl | bash` one-liner to their `devcontainer.json`, and this repo handles everything else: installing Claude Code, deploying permissions, project instructions, and skills.
+Self-contained Claude Code profiles for FluidFramework. Swap your entire `.claude/` configuration with a single command.
 
 ## Quick Start
 
-Add this to your `devcontainer.json` `postCreateCommand`:
+### Codespace / Fresh Setup
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/brrichards/ff-profiles/main/setup.sh | bash
+```
+
+This will:
+1. Install Claude Code if not already installed
+2. Clone this repo to `./ff-profiles/`
+3. Apply the `developer` profile to `.claude/`
+
+### Codespace Auto-Setup
+
+Add to `.devcontainer/devcontainer.json`:
 
 ```json
 {
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup-ai-assistant.sh | bash"
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/ff-profiles/main/setup.sh | bash"
 }
 ```
 
-## Configuration
+## Switching Profiles
 
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CLAUDE_SETUP_REPO` | `brrichards/claude-codespace-setup` | GitHub repo to fetch configs from (for forks) |
-| `CLAUDE_SETUP_REF` | `main` | Git ref (branch/tag/commit) to use |
-
-## File Structure
+Once set up, use the `/profiles` slash command inside Claude Code:
 
 ```
-├── README.md                     # This file
-├── setup-ai-assistant.sh         # Entry point — curled and piped to bash
-└── .claude/
-    ├── CLAUDE.md                 # Default project instructions template
-    ├── settings.json             # Permissions config
-    └── skills/
-        ├── skills.md             # Manifest listing skill names to download
-        └── reviewer/
-            └── SKILL.md          # Review staged/branched changes skill
+/profiles list              # Show available profiles
+/profiles swap minimal      # Switch to a different profile
+/profiles swap developer    # Switch back
 ```
 
-The repo structure mirrors the deployed structure exactly, making it easy to see what gets installed where.
+Or use the script directly:
 
-## Permissions Model
+```bash
+bash ./ff-profiles/scripts/swap-profile.sh list
+bash ./ff-profiles/scripts/swap-profile.sh swap minimal
+```
 
-The `settings.json` uses `bypassPermissions` mode with an explicit deny list. This allows Claude Code to work efficiently while blocking dangerous operations.
+## Available Profiles
 
-### Default Mode: bypassPermissions
+| Profile | Description |
+|---------|-------------|
+| `developer` | Full-featured FluidFramework development profile with coding standards, agents, and skills. |
+| `pr-prep` | PR preparation profile — automated code review, simplification, validation, and push. |
+| `minimal` | Bare-bones profile with no behavioral modifications. |
 
-Claude Code runs most commands without prompting, enabling a smooth workflow for development tasks.
+## Adding a New Profile
 
-### Denied Operations
+1. Create a directory under `claude-profiles/`:
 
-| Pattern | Reason |
-|---------|--------|
-| `git push*` | Prevents accidental pushes; requires explicit user action |
-| `git push --force*` | Prevents force pushes that can destroy history |
-| `git push -f*` | Same as above (short flag) |
-| `git reset --hard*` | Prevents loss of uncommitted work |
-| `git clean -f*` | Prevents deletion of untracked files |
-| `rm -rf /*` | Prevents catastrophic system deletion |
-| `rm -rf .*` | Prevents deletion of dotfiles/hidden directories |
-| `: \| *` | Prevents fork bombs and similar resource exhaustion |
+```
+claude-profiles/my-profile/
+├── profile.json        # { "name": "my-profile", "description": "..." }
+├── CLAUDE.md           # Main instructions
+├── settings.json       # Permissions (allow/deny rules)
+├── .mcp.json           # MCP server configs (optional)
+├── hooks.json          # Hook definitions (optional)
+├── agents/             # Agent definitions (.md files)
+├── commands/           # Slash commands (.md files)
+└── skills/             # Skills (skill-name/SKILL.md)
+```
 
-### Rationale
+2. At minimum, provide `profile.json`, `CLAUDE.md`, and `settings.json`.
 
-- **Git push operations**: Users should explicitly push changes after review
-- **Destructive git operations**: Hard resets and force cleans can cause data loss
-- **Dangerous rm commands**: Broad deletions should never be automated
-- **Fork bombs**: Prevent resource exhaustion attacks
+3. The `/profiles` command will automatically discover it.
 
-## How It Works
+## Profile Structure Reference
 
-1. Consumer adds the `curl | bash` one-liner to `devcontainer.json`
-2. When the Codespace starts, the script:
-   - Installs Claude Code via the official installer
-   - Verifies installation and prints the version
-   - Creates the `.claude/` directory structure
-   - Downloads `settings.json` (always overwrites)
-   - Downloads `CLAUDE.md` (only if not present)
-   - Downloads all skills (always overwrites)
-   - Prints a summary of what was installed/skipped
+Each profile is a complete `.claude/` directory snapshot. When you swap to a profile, the entire `.claude/` directory is replaced with the profile contents. The `/profiles` slash command is automatically injected into every profile so you can always swap.
 
-The script is idempotent and safe to run multiple times. It uses only `curl` — no `git clone` or `gh` CLI required.
+| File | Purpose |
+|------|---------|
+| `profile.json` | Profile metadata (name, description) |
+| `CLAUDE.md` | Main instructions for Claude Code |
+| `settings.json` | Permissions — allow/deny rules for tools |
+| `.mcp.json` | MCP server configurations |
+| `hooks.json` | Hook definitions (PreToolUse, SessionStart, etc.) |
+| `agents/*.md` | Custom agent definitions |
+| `commands/*.md` | Custom slash commands |
+| `skills/*/SKILL.md` | Custom skills |
+
+## Running Tests
+
+```bash
+bash tests/test-swap.sh
+bash tests/test-setup.sh
+bash tests/test-pr-prep.sh
+```
