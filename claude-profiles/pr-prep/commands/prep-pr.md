@@ -8,8 +8,8 @@ You are executing the PR preparation pipeline. Follow the `pr-checklist` skill t
 
 - Current branch: !`git branch --show-current`
 - Uncommitted changes: !`git status --short`
-- Commits ahead of base: !`.claude/hooks/branch-context.sh commits`
-- Changed files: !`.claude/hooks/branch-context.sh files`
+- Commits ahead of base: !`node .claude/hooks/branch-context.mjs commits`
+- Changed files: !`node .claude/hooks/branch-context.mjs files`
 
 ## Instructions
 

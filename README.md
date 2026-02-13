@@ -4,24 +4,31 @@ Self-contained Claude Code profiles for FluidFramework. Swap your entire `.claud
 
 ## Quick Start
 
-### Codespace / Fresh Setup
+### Any Platform (requires Node.js)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup.sh | bash
+node setup.mjs
+```
+
+Or clone into an existing project and run:
+
+```bash
+git clone https://github.com/brrichards/claude-codespace-setup.git ff-profiles
+node ff-profiles/setup.mjs --local --target .
 ```
 
 This will:
 1. Install Claude Code if not already installed
-2. Clone this repo to `./ff-profiles/`
+2. Clone this repo to `./ff-profiles/` (skipped with `--local`)
 3. Apply the `developer` profile to `.claude/`
 
 ### Codespace Auto-Setup
 
-Add to `.devcontainer/devcontainer.json`:
+Add this repo as a git submodule or clone it during setup. Then in `.devcontainer/devcontainer.json`:
 
 ```json
 {
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/brrichards/claude-codespace-setup/main/setup.sh | bash"
+  "postCreateCommand": "git clone https://github.com/brrichards/claude-codespace-setup.git ff-profiles && node ff-profiles/setup.mjs --local --skip-install --target ."
 }
 ```
 
@@ -55,8 +62,8 @@ Once set up, use the `/profiles` slash command inside Claude Code:
 Or use the script directly:
 
 ```bash
-bash ./ff-profiles/scripts/swap-profile.sh list
-bash ./ff-profiles/scripts/swap-profile.sh swap minimal
+node ./ff-profiles/scripts/swap-profile.mjs list
+node ./ff-profiles/scripts/swap-profile.mjs swap minimal
 ```
 
 ## Available Profiles
